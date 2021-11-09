@@ -70,8 +70,6 @@ buildPythonPackage rec {
         -I test_kuccsd_supercell_vs_kpts\.py \
         -I test_kccsd_ghf\.py \
         -I test_h_.*\.py \
-        -I test_P_uadc_ea.py \
-        -I test_P_uadc_ip.py \
         --exclude-test=pyscf/pbc/gw/test/test_kgw_slow_supercell.DiamondTestSupercell3 \
         --exclude-test=pyscf/pbc/gw/test/test_kgw_slow_supercell.DiamondKSTestSupercell3 \
         --exclude-test=pyscf/pbc/gw/test/test_kgw_slow.DiamondTestSupercell3 \
