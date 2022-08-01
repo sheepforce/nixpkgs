@@ -251,6 +251,14 @@ in {
       '';
     };
 
+    fastcgiTimeout = mkOption {
+      type = types.int;
+      default = 120;
+      description = ''
+        FastCGI timeout for database connection in seconds.
+      '';
+    };
+
     database = {
 
       createLocally = mkOption {
@@ -975,7 +983,7 @@ in {
               fastcgi_pass unix:${fpm.socket};
               fastcgi_intercept_errors on;
               fastcgi_request_buffering off;
-              fastcgi_read_timeout 120s;
+              fastcgi_read_timeout ${builtins.toString config.services.nextcloud.fastcgiTimeout}s;
             '';
           };
           "~ \\.(?:css|js|woff2?|svg|gif|map)$".extraConfig = ''
