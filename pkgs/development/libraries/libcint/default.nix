@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
   };
 
   postPatch = ''
-    sed -i 's/libcint.so/libcint${stdenv.hostPlatform.extensions.sharedLibrary}/g' testsuite/*.py
+    sed -i 's/libcint.so/libcint${stdenv.hostPlatform.extensions.library}/g' testsuite/*.py
   '';
 
   nativeBuildInputs = [ cmake ];
