@@ -10,6 +10,7 @@
 , lapack
 , python3
 , libxsmm
+, enableLibxsmm ? stdenv.hostPlatform.isx86_64
 , mpi
 , openssh
 }:
@@ -30,8 +31,8 @@ stdenv.mkDerivation rec {
 
     # Force build of shared library, otherwise just static.
     substituteInPlace src/CMakeLists.txt \
-      --replace 'add_library(dbcsr ''${DBCSR_SRCS})' 'add_library(dbcsr SHARED ''${DBCSR_SRCS})' \
-      --replace 'add_library(dbcsr_c ''${DBCSR_C_SRCS})' 'add_library(dbcsr_c SHARED ''${DBCSR_C_SRCS})'
+      --replace 'add_library(dbcsr ''${DBCSR_SRCS})' 'add_library(dbcsr ${lib.strings.optionalString (!stdenv.hostPlatform.isStatic) "SHARED"} ''${DBCSR_SRCS})' \
+      --replace 'add_library(dbcsr_c ''${DBCSR_C_SRCS})' 'add_library(dbcsr_c ${lib.strings.optionalString (!stdenv.hostPlatform.isStatic) "SHARED"} ''${DBCSR_C_SRCS})'
 
     # Avoid calling the fypp wrapper script with python again. The nix wrapper took care of that.
     substituteInPlace cmake/fypp-sources.cmake \
@@ -46,7 +47,7 @@ stdenv.mkDerivation rec {
     fypp
   ];
 
-  buildInputs = [ blas lapack libxsmm ];
+  buildInputs = [ blas lapack ] ++ lib.optional enableLibxsmm libxsmm;
 
   propagatedBuildInputs = [ mpi ];
 
@@ -56,7 +57,7 @@ stdenv.mkDerivation rec {
 
   cmakeFlags = [
     "-DUSE_OPENMP=ON"
-    "-DUSE_SMM=libxsmm"
+    "-DUSE_SMM=${if enableLibxsmm then "libxsmm" else "blas"}"
     "-DWITH_C_API=ON"
     "-DBUILD_TESTING=ON"
     "-DTEST_OMP_THREADS=2"
