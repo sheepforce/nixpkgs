@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
     fetchSubmodules = true;
   };
 
-  outputs = [ "out" "dev" ];
+  #outputs = [ "out" "dev" ];
 
   postPatch = ''
     patchShebangs ./autogen.pl
@@ -50,6 +50,7 @@ stdenv.mkDerivation rec {
     ./autogen.pl
   '';
 
+  /*
   postInstall = ''
     find $out/lib/ -name "*.la" -exec rm -f \{} \;
 
@@ -71,9 +72,11 @@ stdenv.mkDerivation rec {
 
     # Pin the compiler to the current version in a cross compiler friendly way.
     # Same pattern as for openmpi (see https://github.com/NixOS/nixpkgs/pull/58964#discussion_r275059427).
+    echo $dev/share/pmix/pmixcc-wrapper-data.txt
     sed -i 's:compiler=.*:compiler=${targetPackages.stdenv.cc}/bin/${targetPackages.stdenv.cc.targetPrefix}cc:' \
       $dev/share/pmix/pmixcc-wrapper-data.txt
   '';
+  */
 
   enableParallelBuilding = true;
 
