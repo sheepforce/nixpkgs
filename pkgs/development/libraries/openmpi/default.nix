@@ -12,7 +12,7 @@
 , enablePrefix ? false
 
 # Enable libfabric support (necessary for Omnipath networks) on x86_64 linux
-, fabricSupport ? stdenv.isLinux && stdenv.isx86_64
+, fabricSupport ? stdenv.isLinux && stdenv.isx86_64 && !stdenv.hostPlatform.isStatic
 
 # Enable Fortran support
 , fortranSupport ? true
@@ -41,10 +41,10 @@ stdenv.mkDerivation rec {
   outputs = [ "out" "man" "dev" ];
 
   buildInputs = [ zlib ]
-    ++ lib.optionals stdenv.isLinux [ libnl numactl pmix ucx ucc ]
+    ++ lib.optionals (stdenv.isLinux && !stdenv.hostPlatform.isStatic) [ libnl numactl pmix ucx ucc ]
     ++ lib.optionals cudaSupport [ cudaPackages.cuda_cudart ]
     ++ [ libevent hwloc ]
-    ++ lib.optional (stdenv.isLinux || stdenv.isFreeBSD) rdma-core
+    ++ lib.optional ((stdenv.isLinux || stdenv.isFreeBSD) && !stdenv.hostPlatform.isStatic) rdma-core
     ++ lib.optionals fabricSupport [ libpsm2 libfabric ];
 
   nativeBuildInputs = [ perl removeReferencesTo makeWrapper ]
@@ -65,6 +65,7 @@ stdenv.mkDerivation rec {
     # https://www.open-mpi.org/faq/?category=buildcuda
     ++ lib.optionals cudaSupport [ "--with-cuda=${cudaPackages.cuda_cudart}" "--enable-dlopen" ]
     ++ lib.optionals fabricSupport [ "--with-psm2=${lib.getDev libpsm2}" "--with-libfabric=${lib.getDev libfabric}" ]
+    ++ lib.optionals stdenv.hostPlatform.isStatic [ "--enable-static" "--without-memory-manager" ]
     ;
 
   enableParallelBuilding = true;
@@ -88,8 +89,8 @@ stdenv.mkDerivation rec {
    '';
 
   postFixup = ''
-    remove-references-to -t $dev $(readlink -f $out/lib/libopen-pal${stdenv.hostPlatform.extensions.sharedLibrary})
-    remove-references-to -t $man $(readlink -f $out/lib/libopen-pal${stdenv.hostPlatform.extensions.sharedLibrary})
+    remove-references-to -t $dev $(readlink -f $out/lib/libopen-pal${stdenv.hostPlatform.extensions.library})
+    remove-references-to -t $man $(readlink -f $out/lib/libopen-pal${stdenv.hostPlatform.extensions.library})
 
     # The path to the wrapper is hard coded in libopen-pal.so, which we just cleared.
     wrapProgram $dev/bin/opal_wrapper \
