@@ -19,6 +19,12 @@ stdenv.mkDerivation rec {
     mesonEmulatorHook
   ];
 
+  # Extended double and quadruple precision on AArch64 causes compilation issues
+  # https://github.com/fortran-lang/test-drive/issues/44
+  mesonFlags = lib.optionals stdenv.hostPlatform.isAarch64 [
+    "-Dxdp=disabled"
+  ];
+
   meta = with lib; {
     description = "Procedural Fortran testing framework";
     homepage = "https://github.com/fortran-lang/test-drive";
