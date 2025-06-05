@@ -247,6 +247,7 @@ let
     cmakeFlags =
       [
         "-DLIBINT2_SHGAUSS_ORDERING=${shGaussOrd}"
+        (lib.strings.cmakeBool "LIBINT2_BUILD_SHARED_AND_STATIC_LIBS" (!stdenv.hostPlatform.isStatic))
       ]
       ++ lib.optional enableFortran "-DENABLE_FORTRAN=ON"
       ++ lib.optional enableSSE "-DLIBINT2_REALTYPE=libint2::simd::VectorSSEDouble";
