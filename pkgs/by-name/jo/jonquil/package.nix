@@ -47,6 +47,9 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     test-drive
+  ];
+
+  propagatedBuildInputs = [
     toml-f
   ];
 

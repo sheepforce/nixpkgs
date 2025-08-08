@@ -58,6 +58,9 @@ stdenv.mkDerivation rec {
   buildInputs = [
     blas
     lapack
+  ];
+
+  propagatedBuildInputs = [
     mctc-lib
     mstore
     multicharge

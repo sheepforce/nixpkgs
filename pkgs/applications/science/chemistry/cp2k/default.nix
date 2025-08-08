@@ -103,9 +103,9 @@ stdenv.mkDerivation rec {
     dftd4
     simple-dftd3
     tblite
-    mctc-lib
-    mstore
-    multicharge
+    #mctc-lib
+    #mstore
+    #multicharge
     libxsmm
     mpi
     spglib
@@ -121,7 +121,7 @@ stdenv.mkDerivation rec {
     spfft
     libvdwxc
     trexio
-    toml-f
+    #toml-f
     greenx
     gmp
   ]
@@ -193,7 +193,7 @@ stdenv.mkDerivation rec {
     for i in $out/bin/*; do
       wrapProgram $i \
         --set-default CP2K_DATA_DIR $out/share/cp2k \
-        --set OMP_NUM_THREADS 1
+        --set-default OMP_NUM_THREADS 1
     done
   '';
 

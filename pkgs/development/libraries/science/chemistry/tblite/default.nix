@@ -58,7 +58,9 @@ stdenv.mkDerivation rec {
     meson
     ninja
   ]
-  ++ lib.optionals (buildType == "cmake") [cmake ninja];
+  ++ lib.optionals (buildType == "cmake") [
+    cmake
+  ];
 
   buildInputs = [
     blas

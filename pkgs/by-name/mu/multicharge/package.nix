@@ -37,9 +37,6 @@ stdenv.mkDerivation rec {
   patches = [
     # Fix wrong generation of package config include paths
     ./pkgconfig.patch
-
-    # Fix strange non-standard LAPACK cmake target
-    # ./lapack.patch
   ];
 
   nativeBuildInputs = [
@@ -56,6 +53,9 @@ stdenv.mkDerivation rec {
   buildInputs = [
     blas
     lapack
+  ];
+
+  propagatedBuildInputs = [
     mctc-lib
     mstore
   ];
