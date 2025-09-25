@@ -19,7 +19,7 @@
 
   # Maximum angular momentum of basis functions
   # 7 is required for def2/J auxiliary basis on 3d metals upwards
-  maxAm ? 7,
+  maxAm ? 5,
 
   # ERI derivative order for 4-, 3- and 2-centre ERIs.
   # 2nd derivatives are defaults and allow gradients Hessians with density fitting
@@ -247,6 +247,7 @@ let
     # Fortran interface is incompatible with changing the LIBINT2_REALTYPE.
     cmakeFlags = [
       "-DLIBINT2_SHGAUSS_ORDERING=${shGaussOrd}"
+      (lib.cmakeBool "BUILD_SHARED_LIBS" (!stdenv.hostPlatform.isStatic))
     ]
     ++ lib.optional enableFortran "-DENABLE_FORTRAN=ON"
     ++ lib.optional enableSSE "-DLIBINT2_REALTYPE=libint2::simd::VectorSSEDouble";
