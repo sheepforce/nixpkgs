@@ -178,27 +178,34 @@ makeScopeWithSplicing' {
         targetLlvmPackages.openmp
       ];
 
-      openmpExtraBuildCommands = lib.optionalString gpuOffloadSupport ''
-        echo "-L${targetLlvmPackages.openmp}/lib" >> $out/nix-support/cc-ldflags
-        ${lib.optionalString (lib.versionAtLeast metadata.release_version "19") ''
-          echo "-L${self.offload}/lib" >> $out/nix-support/cc-ldflags
+      openmpExtraNixSupport = lib.optionalAttrs gpuOffloadSupport {
+        cc-ldflags =
+          [ "-L${targetLlvmPackages.openmp}/lib" ]
+          ++ lib.optionals (lib.versionAtLeast metadata.release_version "19") [
+            "-L${self.offload}/lib"
+          ];
+
+        cc-cflags =
           # The device linker (ld.lld) invoked by clang-linker-wrapper needs
           # to find libompdevice in the per-triple subdirectory of the offload
           # runtime.  cc-ldflags only affect the host linker, so we use
           # -Wl,--device-linker= to forward -L paths to the device linker via
           # the compiler driver.
-          ${lib.optionalString rocmSupport ''
-            echo "-Wl,--device-linker=-L -Wl,--device-linker=${self.offload}/lib/amdgcn-amd-amdhsa" >> $out/nix-support/cc-cflags
-          ''}
-          ${lib.optionalString cudaSupport ''
-            echo "-Wl,--device-linker=-L -Wl,--device-linker=${self.offload}/lib/nvptx64-nvidia-cuda" >> $out/nix-support/cc-cflags
-          ''}
-        ''}
-        # Tell clang where to find the ROCm device library bitcode, so users
-        # don't need to pass --rocm-device-lib-path manually.
-        ${lib.optionalString rocmSupport ''
-          echo "--rocm-device-lib-path=${pkgs.rocmPackages.rocm-device-libs}/amdgcn/bitcode" >> $out/nix-support/cc-cflags
-        ''}
+          lib.optionals (lib.versionAtLeast metadata.release_version "19" && rocmSupport) [
+            "-Wl,--device-linker=-L"
+            "-Wl,--device-linker=${self.offload}/lib/amdgcn-amd-amdhsa"
+          ]
+          ++ lib.optionals (lib.versionAtLeast metadata.release_version "19" && cudaSupport) [
+            "-Wl,--device-linker=-L"
+            "-Wl,--device-linker=${self.offload}/lib/nvptx64-nvidia-cuda"
+          ]
+          # Tell clang where to find the ROCm device library bitcode, so users
+          # don't need to pass --rocm-device-lib-path manually.
+          ++ lib.optional rocmSupport
+            "--rocm-device-lib-path=${pkgs.rocmPackages.rocm-device-libs}/amdgcn/bitcode";
+      };
+
+      openmpExtraBuildCommands = lib.optionalString gpuOffloadSupport ''
         # Make offload tools available on PATH.  The cc-wrapper prepends
         # $out/bin to PATH (cc-wrapper.sh), so symlinking the tools here
         # makes them available during device compilation and linking.
@@ -284,6 +291,7 @@ makeScopeWithSplicing' {
         extraPackages = [ targetLlvmPackages.compiler-rt ] ++ openmpExtraPackages;
         extraTools = lib.optionals gpuOffloadSupport [ self.lld ];
         extraBuildCommands = mkExtraBuildCommands cc + openmpExtraBuildCommands;
+        nixSupport = openmpExtraNixSupport;
       };
 
       libcxxClang = wrapCCWith rec {
@@ -292,6 +300,7 @@ makeScopeWithSplicing' {
         extraPackages = [ targetLlvmPackages.compiler-rt ] ++ openmpExtraPackages;
         extraTools = lib.optionals gpuOffloadSupport [ self.lld ];
         extraBuildCommands = mkExtraBuildCommands cc + openmpExtraBuildCommands;
+        nixSupport = openmpExtraNixSupport;
       };
 
       # Darwin uses the system libc++ by default. It is set up as its own clang definition so that `libcxxClang`
@@ -302,6 +311,7 @@ makeScopeWithSplicing' {
         extraPackages = [ targetLlvmPackages.compiler-rt ] ++ openmpExtraPackages;
         extraTools = lib.optionals gpuOffloadSupport [ self.lld ];
         extraBuildCommands = mkExtraBuildCommands cc + openmpExtraBuildCommands;
+        nixSupport = openmpExtraNixSupport;
       };
 
       lld = callPackage ./lld { };
@@ -547,6 +557,7 @@ makeScopeWithSplicing' {
         inherit cudaSupport rocmSupport;
         inherit (pkgs) cudaPackages rocmPackages;
         stdenv = if cudaSupport || rocmSupport then overrideCC stdenv buildLlvmPackages.clang else stdenv;
+        clang-unwrapped = buildLlvmPackages.clang-unwrapped;
       };
     }
     // lib.optionalAttrs (lib.versionAtLeast metadata.release_version "20") (
@@ -608,6 +619,7 @@ makeScopeWithSplicing' {
                   fi
                 ''
                 + openmpExtraBuildCommands;
+              nixSupport = openmpExtraNixSupport;
             };
             tests = callPackage ./flang/tests.nix {
               flang = wrapped;
