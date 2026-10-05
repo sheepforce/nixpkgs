@@ -147,6 +147,17 @@ stdenv.mkDerivation (finalAttrs: {
       url = "https://github.com/icl-utk-edu/magma/commit/235aefb7b064954fce09d035c69907ba8a87cbcd.patch";
       hash = "sha256-i9InbxD5HtfonB/GyF9nQhFmok3jZ73RxGcIciGBGvU=";
     })
+    # Reduce MAGMA's binary footprint: add -Xfatbin -compress-all and compile
+    # PTX only for the latest architecture, keeping libmagma.so under the 2 GB
+    # relocation limit.  Not yet in a release (v2.10.0 predates the merge).
+    # Upstream: https://github.com/icl-utk-edu/magma/pull/83
+    # Fixes:    https://github.com/icl-utk-edu/magma/issues/39
+    #           https://github.com/NixOS/nixpkgs/issues/239237
+    (fetchpatch {
+          name = "reduce-binary-footprint.patch";
+      url = "https://github.com/icl-utk-edu/magma/pull/83.patch";
+      hash = "sha256-J+VEuTGmtAqJEBsw9vgTYKpyHo/VkQXk/acgBD1paJs=";
+    })
   ]
   ++ lib.optionals rocmSupport [
     # TODO: Drop both these patches on next magma release
