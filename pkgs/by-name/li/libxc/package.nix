@@ -6,6 +6,7 @@
   cmake,
   gfortran,
   perl,
+  python3,
   version ? "6.2.2",
 }:
 
@@ -13,12 +14,18 @@ let
   versionHashes = {
     "6.2.2" = "sha256-JYhuyW95I7Q0edLIe7H//+ej5vh6MdAGxXjmNxDMuhQ=";
     "7.0.0" = "sha256-mGyGtKDurOrSS0AYrtwhF62pJGPBLbPPNBgFV7fyyug=";
+    "7.1.0" = "sha256-fo6Nf5FNk79z3a8RSPNfnq367UWlZbCnVljwZ1c9deE=";
   };
+
+  pyEnv = python3.withPackages (p: [ p.pytest ]);
 
 in
 stdenv.mkDerivation rec {
   pname = "libxc";
   inherit version;
+
+  strictDeps = true;
+  __structuredAttrs = true;
 
   src = fetchFromGitLab {
     owner = "libxc";
@@ -27,7 +34,7 @@ stdenv.mkDerivation rec {
     hash = versionHashes."${version}";
   };
 
-  patches = [
+  patches = lib.optionals (lib.versionOlder version "7.1") [
     # Fix build with newer CMake versions
     (fetchpatch {
       url = "https://gitlab.com/libxc/libxc/-/commit/450202adb8a3d698841dca853f2999b1befd932e.patch";
@@ -51,6 +58,7 @@ stdenv.mkDerivation rec {
     perl
     cmake
     gfortran
+    pyEnv
   ];
 
   preConfigure = ''

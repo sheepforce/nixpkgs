@@ -10374,7 +10374,7 @@ with pkgs;
 
   ### SCIENCE/CHEMISTY
 
-  libxc_7 = pkgs.libxc.override { version = "7.0.0"; };
+  libxc_7 = pkgs.libxc.override { version = "7.1.0"; };
 
   molbar = with python3Packages; toPythonApplication molbar;
 
